@@ -1,9 +1,21 @@
 #include <Arduino.h>
 
-void setup() {
-  // put your setup code here, to run once:
+#include "./NetworkBase/NetworkBase.h"
+
+// Network global settings and objects
+char *hostname = (char *)"MultimediaOutletRelay";
+NetworkBase *network;
+
+void setup()
+{
+  Serial.begin(115200);
+
+  Serial.println("Setting up network settings");
+  boolean reset = (bool)false;
+  network = new NetworkBase(hostname, reset);
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
+void loop()
+{
+  network->handleLoop();
 }
