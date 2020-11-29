@@ -1,20 +1,29 @@
 #ifndef DEVICECONFIGURATION_H
 #define DEVICECONFIGURATION_H
 
+struct NetworkConfiguration
+{
+  String mqttClientName;
+  String mqttBrokerServer;
+  String mqttBrokerUser;
+  String mqttBrokerPassword;
+  int mqttBrokerPort;
+};
+
 struct DeviceDescription
 {
-  char circuitId[36];
-  char defaultName[200];
-  char hostname[200];
+  String circuitId;
+  String defaultName;
+  String hostname;
 };
 
 struct ActionDescription
 {
-  char actionId[36];
-  char defaultName[200];
+  String actionId;
+  String defaultName;
   bool isDefault;
   unsigned int pin;
-  char url[200];
+  String topic;
 };
 
 #endif
