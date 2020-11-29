@@ -35,6 +35,7 @@ private:
     //void executeCommand(char *featureId, const char *command, const char *correlationId);
     void callback(char *topic, byte *payload, unsigned int length);
 
+    char *feedbackTopic;
     unsigned int numberOfAvailableActions;
     PubSubClient *mqttClient;
     PayloadManager *payloadManager;
