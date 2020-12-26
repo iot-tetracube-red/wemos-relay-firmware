@@ -26,6 +26,7 @@ public:
                               DeviceDescription *deviceDescription,
                               ActionDescription actionDescriptions[],
                               unsigned int numberOfActions);
+  void getActionResponsePayload(char *payload);
   // void getTelemetryPayload(char *payload, ApplianceDescription applianceDescription, FeatureDescription featureDescription);
   // void getCommandResponsePayload(char *payload, const char *correlationId, bool success, float currentFeatureStatus);
 

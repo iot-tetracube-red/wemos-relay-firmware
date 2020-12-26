@@ -31,9 +31,15 @@ void PayloadManager::getProvisioningPayload(char *payload,
         JsonObject action = actions.createNestedObject();
         action["id"] = actionDescriptions[i].actionId;
         action["default_name"] = actionDescriptions[i].defaultName;
-        action["is_default"] = actionDescriptions[i].isDefault ? "true" : "false";
-        action["topic"] = actionDescriptions[i].topic;
+        action["url"] = actionDescriptions[i].url;
     }
 
+    serializeJson(jsonDocument, payload, 500);
+}
+
+void PayloadManager::getActionResponsePayload(char *payload)
+{
+    StaticJsonDocument<500> jsonDocument;
+    jsonDocument["success"] = "true";
     serializeJson(jsonDocument, payload, 500);
 }

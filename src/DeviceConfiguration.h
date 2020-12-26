@@ -3,8 +3,8 @@
 
 struct NetworkConfiguration
 {
-  String mqttClientName;
-  String mqttBrokerServer;
+  String hostName;
+  String smartHubServer;
   String mqttBrokerUser;
   String mqttBrokerPassword;
   int mqttBrokerPort;
@@ -21,9 +21,8 @@ struct ActionDescription
 {
   String actionId;
   String defaultName;
-  bool isDefault;
   unsigned int pin;
-  String topic;
+  String url;
 };
 
 #endif
