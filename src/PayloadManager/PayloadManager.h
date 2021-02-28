@@ -22,10 +22,7 @@ public:
   PayloadManager();
 
   void getCommandResponsePayload(char *payload, ActionDescription *actionDescription);
-  void getProvisioningPayload(char *payload,
-                              DeviceDescription *deviceDescription,
-                              ActionDescription actionDescriptions[],
-                              unsigned int numberOfActions);
+  void getProvisioningPayload(char *payload, DeviceDescription *deviceDescription);
   void getActionResponsePayload(char *payload);
   // void getTelemetryPayload(char *payload, ApplianceDescription applianceDescription, FeatureDescription featureDescription);
   // void getCommandResponsePayload(char *payload, const char *correlationId, bool success, float currentFeatureStatus);

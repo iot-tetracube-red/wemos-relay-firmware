@@ -1,103 +1,80 @@
 #include <Arduino.h>
-#include <ESP8266WiFi.h>
 
-#include "./DeviceConfiguration.h"
-#include "./NetworkBase/NetworkBase.h"
-#include "./DeviceHardware.h"
-#include "./SmartHubClient/SmartHubClient.h"
-#include "./PayloadManager/PayloadManager.h"
+#include "NetworkBase/NetworkBase.h"
+#include "config.h"
+#include "DeviceConfiguration.h"
+#include "Device/Device.h"
+#include "StatusManager/StatusManager.h"
 
-// Network global settings and objects
-String hostname = "multimedia-outlet-relay";
-NetworkBase *network;
-WiFiClient espClient;
-ESP8266WebServer server(80);
-
-// Device description objects
-const unsigned int numberOfActions = 2U;
+// Global objects
 NetworkConfiguration networkConfiguration;
 DeviceDescription deviceDescription;
-ActionDescription actionsDescriptions[numberOfActions];
-PayloadManager *payloadManager;
-DeviceHardware *deviceHardware;
-SmartHubClient *smartHubClient;
+NetworkBase *network;
+Device *device;
+StatusManager *statusManager;
 
-void handleTurnOutletOn()
+void configureDevice()
 {
-  deviceHardware->turnOnOutlet(&actionsDescriptions[0]);
-  char payload[500];
-  payloadManager->getActionResponsePayload(payload);
-  server.send(200, "application/json", payload);
-}
+    networkConfiguration.hostName = (char *)"multimedia-outlet-relay";
+    networkConfiguration.mqttHost = (char *)MQTT_HOST;
+    networkConfiguration.mqttBrokerPort = MQTT_PORT;
+    networkConfiguration.mqttBrokerUser = (char *)MQTT_USER;
+    networkConfiguration.mqttBrokerPassword = (char *)MQTT_PASSWORD;
+    networkConfiguration.smartHubServer = (char *)SMART_HUB_HOST;
+    networkConfiguration.networkStatus = (char *)NO_WIFI_CONNECTION;
 
-void handleTurnOutletOff()
-{
-  deviceHardware->turnOffOutlet(&actionsDescriptions[1]);
-  char payload[500];
-  payloadManager->getActionResponsePayload(payload);
-  server.send(200, "application/json", payload);
-}
+    deviceDescription.id = "22cbfa35-142d-4e17-a579-66aa7f8cad00";
+    deviceDescription.name = "multimedia outlet relay";
+    deviceDescription.feedbackTopic = (char *)"devices/feedback/22cbfa35-142d-4e17-a579-66aa7f8cad00";
+    deviceDescription.numberOfFeatures = 1;
+    deviceDescription.features = new FeatureDescription[deviceDescription.numberOfFeatures];
 
-void handleNotFound(){
-  server.send(404, "text/plain", "Not found");
-}
+    FeatureDescription relayFeature;
+    relayFeature.id = "3253f251-3ab3-4987-8cdf-aa686de2b52b";
+    relayFeature.featureType = "SWITCH";
+    relayFeature.name = "Relay Switch";
+    relayFeature.value = 0.0;
+    relayFeature.numberOfActions = 2;
+    relayFeature.actions = new ActionDescription[relayFeature.numberOfActions];
+    deviceDescription.features[0] = relayFeature;
 
+    ActionDescription turnOnAction;
+    turnOnAction.id = "3253f251-3ab3-4987-8cdf-aa686de2b52b";
+    turnOnAction.name = "TURN_ON";
+    turnOnAction.triggerTopic = "devices/ce694f72-c12b-4e19-aa80-c3af37898615/feature/3253f251-3ab3-4987-8cdf-aa686de2b52b";
+    relayFeature.actions[0] = turnOnAction;
 
-void defineDevice()
-{
-  networkConfiguration.hostName = hostname;
-  networkConfiguration.smartHubServer = "192.168.1.87:8080";
-
-  deviceDescription.hostname = hostname;
-  deviceDescription.circuitId = "a9506610-e23a-42e1-999f-88c9c367183e";
-  deviceDescription.defaultName = "MultimediaOutletRelay";
-
-  ActionDescription turnOn;
-  turnOn.actionId = "62cff706-1183-4354-8628-5b2d2f608a3e";
-  turnOn.defaultName = "Turn On";
-  turnOn.pin = 13;
-  turnOn.url = "/switch/on";
-  actionsDescriptions[0] = turnOn;
-  server.on(turnOn.url, handleTurnOutletOn);
-
-  ActionDescription turnOff;
-  turnOff.actionId = "3e8c8b40-1014-4e8e-8501-a808f7c01ddc";
-  turnOff.defaultName = "Turn Off";
-  turnOff.pin = 13;
-  turnOff.url = "/switch/off";
-  actionsDescriptions[1] = turnOff;
-  server.on(turnOff.url, handleTurnOutletOff);
+    ActionDescription turnOffAction;
+    turnOffAction.id = "7bb7f58e-68e3-4589-bbaf-e8e23b78e80a";
+    turnOffAction.name = "TURN_OFF";
+    turnOffAction.triggerTopic = "devices/ce694f72-c12b-4e19-aa80-c3af37898615/feature/7bb7f58e-68e3-4589-bbaf-e8e23b78e80a";
+    relayFeature.actions[1] = turnOffAction;
 }
 
 void setup()
 {
-  Serial.begin(115200);
+    Serial.begin(115200);
 
-  Serial.println("Setting up network settings");
-  boolean reset = (bool)false;
-  char hostnameChar[hostname.length() + 1];
-  hostname.toCharArray(hostnameChar, hostname.length() + 1);
-  network = new NetworkBase(hostnameChar, reset);
+    Serial.println("Configuring device network");
+    configureDevice();
 
-  Serial.println("Waiting for WiFi connection stable");
-  delay(1000);
+    Serial.println("Initializing device status manager");
+    statusManager = new StatusManager(&networkConfiguration);
 
-  WiFi.hostname(hostname);
-  payloadManager = new PayloadManager();
+    Serial.println("Starting network manager");
+    networkConfiguration.networkStatus = (char *)CONNECTING_WIFI;
+    network = new NetworkBase(networkConfiguration.hostName, (bool)false);
+    statusManager->RunStatusManager();
 
-  Serial.println("Setting up device description objects");
-  deviceHardware = new DeviceHardware();
-  defineDevice();
-  server.onNotFound(handleNotFound);
-  server.begin();
-  Serial.println("HTTP server started");
+    Serial.println("Waiting for WiFi connection stable");
+    delay(500);
 
-  smartHubClient = new SmartHubClient(networkConfiguration.smartHubServer, payloadManager);
-  smartHubClient->makeProvisioningRequest(&deviceDescription, actionsDescriptions, numberOfActions);
+    device = new Device(&networkConfiguration, &deviceDescription);
 }
 
 void loop()
 {
-  network->handleLoop();
-  server.handleClient();
+    statusManager->RunStatusManager();
+    network->handleLoop();
+    device->mqttClientLoop();
 }

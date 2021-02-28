@@ -9,32 +9,42 @@ void PayloadManager::getCommandResponsePayload(char *payload, ActionDescription 
     size_t capacity = 500;
 
     DynamicJsonDocument jsonDocument(capacity);
-    jsonDocument["circuitId"] = actionDescription->actionId;
+    jsonDocument["circuitId"] = actionDescription->id;
     jsonDocument["success"] = (bool)true;
 
     serializeJson(jsonDocument, payload, capacity);
 }
 
-void PayloadManager::getProvisioningPayload(char *payload,
-                                            DeviceDescription *deviceDescription,
-                                            ActionDescription actionDescriptions[],
-                                            unsigned int numberOfActions)
+void PayloadManager::getProvisioningPayload(char *payload, DeviceDescription *deviceDescription)
 {
     StaticJsonDocument<500> jsonDocument;
-    jsonDocument["id"] = deviceDescription->circuitId;
-    jsonDocument["default_name"] = deviceDescription->defaultName;
-    jsonDocument["hostname"] = deviceDescription->hostname;
+    jsonDocument["id"] = deviceDescription->id;
+    jsonDocument["name"] = deviceDescription->name;
+    jsonDocument["feedback-topic"] = deviceDescription->feedbackTopic;
 
-    JsonArray actions = jsonDocument.createNestedArray("actions");
-    for (unsigned int i = 0; i < numberOfActions; i++)
+    JsonArray features = jsonDocument.createNestedArray("features");
+    for (unsigned int featureCounter = 0; featureCounter < deviceDescription->numberOfFeatures; featureCounter++)
     {
-        JsonObject action = actions.createNestedObject();
-        action["id"] = actionDescriptions[i].actionId;
-        action["default_name"] = actionDescriptions[i].defaultName;
-        action["url"] = actionDescriptions[i].url;
+        FeatureDescription currentFeature = deviceDescription->features[featureCounter];
+        JsonObject feature = features.createNestedObject();
+        feature["id"] = currentFeature.id;
+        feature["name"] = currentFeature.name;
+        feature["feature_type"] = currentFeature.featureType;
+        feature["value"] = currentFeature.value;
+
+        JsonArray actions = feature.createNestedArray("actions");
+        for (unsigned int actionCounter = 0; actionCounter < currentFeature.numberOfActions; actionCounter++)
+        {
+            ActionDescription currentAction = currentFeature.actions[actionCounter];
+            JsonObject action = actions.createNestedObject();
+            action["id"] = currentAction.id;
+            action["name"] = currentAction.name;
+            action["trigger_topic"] = currentAction.triggerTopic;
+        }
     }
 
     serializeJson(jsonDocument, payload, 500);
+    Serial.println(payload);
 }
 
 void PayloadManager::getActionResponsePayload(char *payload)
