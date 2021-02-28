@@ -24,8 +24,8 @@ void configureDevice()
     networkConfiguration.networkStatus = (char *)NO_WIFI_CONNECTION;
 
     deviceDescription.id = "22cbfa35-142d-4e17-a579-66aa7f8cad00";
-    deviceDescription.name = "multimedia outlet relay";
-    deviceDescription.feedbackTopic = (char *)"devices/feedback/22cbfa35-142d-4e17-a579-66aa7f8cad00";
+    deviceDescription.name = "Multimedia Outlet Relay";
+    deviceDescription.feedbackTopic = (char *)"devices/feedback/22cbfa35-142d-4e17-a579-66aa7f8cad01";
     deviceDescription.numberOfFeatures = 1;
     deviceDescription.features = new FeatureDescription[deviceDescription.numberOfFeatures];
 

@@ -13,7 +13,7 @@ Device::Device(NetworkConfiguration *networkConfiguration, DeviceDescription *de
 
     Serial.println("Setting up MQTT host");
     this->mqttClient->setServer(networkConfiguration->mqttHost, networkConfiguration->mqttBrokerPort);
-    this->mqttClient->setBufferSize(2048);
+    this->mqttClient->setBufferSize(4096);
 
     Serial.println("Setting MQTT callback");
     this->mqttClient->setCallback([&](char *topic, byte *payload, unsigned int length) {
@@ -24,7 +24,7 @@ Device::Device(NetworkConfiguration *networkConfiguration, DeviceDescription *de
 void Device::sendDeviceProvisioningPayload()
 {
     Serial.println("Preparing and sending provisioning message");
-    char provisioningPayload[500];
+    char provisioningPayload[800];
     this->payloadManager->getProvisioningPayload(provisioningPayload, this->deviceDescription);
     this->makeProvisioningRequest(provisioningPayload);
 }
@@ -94,5 +94,11 @@ void Device::callback(char *topic, byte *payload, unsigned int length)
 void Device::makeProvisioningRequest(char *deviceProvisioningPayload)
 {
     Serial.println("Publishing device provisioning");
-    this->mqttClient->publish("devices/provisioning", deviceProvisioningPayload);
+    bool published = this->mqttClient->publish("devices/provisioning", deviceProvisioningPayload);
+    Serial.print("Published: ");
+    Serial.println(published);
+    if (!published)
+    {
+        this->networkConfiguration->networkStatus = (char *)NO_WIFI_CONNECTION;
+    }
 }

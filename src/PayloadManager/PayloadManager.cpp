@@ -17,7 +17,7 @@ void PayloadManager::getCommandResponsePayload(char *payload, ActionDescription 
 
 void PayloadManager::getProvisioningPayload(char *payload, DeviceDescription *deviceDescription)
 {
-    StaticJsonDocument<500> jsonDocument;
+    StaticJsonDocument<800> jsonDocument;
     jsonDocument["id"] = deviceDescription->id;
     jsonDocument["name"] = deviceDescription->name;
     jsonDocument["feedback-topic"] = deviceDescription->feedbackTopic;
@@ -43,7 +43,7 @@ void PayloadManager::getProvisioningPayload(char *payload, DeviceDescription *de
         }
     }
 
-    serializeJson(jsonDocument, payload, 500);
+    serializeJson(jsonDocument, payload, 800);
     Serial.println(payload);
 }
 
